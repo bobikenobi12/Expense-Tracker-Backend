@@ -4,6 +4,7 @@ import (
 	"ExpenseTracker/config"
 	"ExpenseTracker/database"
 	"ExpenseTracker/router"
+	"log"
 	"os"
 
 	"github.com/gofiber/fiber/v2"
@@ -40,6 +41,7 @@ func SetupAndRunApp() error {
 		port = "8080"
 	}
 	app.Listen(":" + port)
+	log.Println("Server started on port " + port)
 
 	return nil
 }
