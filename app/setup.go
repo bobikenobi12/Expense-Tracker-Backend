@@ -3,6 +3,12 @@ package app
 import (
 	"ExpenseTracker/config"
 	"ExpenseTracker/database"
+	"ExpenseTracker/router"
+	"os"
+
+	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/logger"
+	"github.com/gofiber/fiber/v2/middleware/recover"
 )
 
 func SetupAndRunApp() error {
@@ -17,6 +23,23 @@ func SetupAndRunApp() error {
 	}
 
 	defer database.CloseMongoDb()
+
+	app := fiber.New()
+
+	app.Use(recover.New())
+	app.Use(logger.New(logger.Config{
+		Format: "[${ip}]:${port} ${status} - ${method} ${path} ${latency}\n",
+	}))
+
+	router.SetUpRoutes(app)
+
+	config.AddSwaggerRoutes(app)
+
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+	app.Listen(":" + port)
 
 	return nil
 }

@@ -1,7 +1,12 @@
 package main
 
-import "fmt"
+import (
+	"ExpenseTracker/app"
+)
 
 func main() {
-	fmt.Println("initialized repo")
+	err := app.SetupAndRunApp()
+	if err != nil {
+		panic(err)
+	}
 }
