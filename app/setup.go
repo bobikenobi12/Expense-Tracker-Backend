@@ -18,12 +18,10 @@ func SetupAndRunApp() error {
 		return err
 	}
 
-	err = database.StartMongoDb()
+	err = database.ConnectPsql()
 	if err != nil {
 		return err
 	}
-
-	defer database.CloseMongoDb()
 
 	app := fiber.New()
 

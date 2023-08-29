@@ -3,48 +3,42 @@ package database
 import (
 	"context"
 	"errors"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 	"os"
+
+	"github.com/go-pg/pg/v11"
 )
 
-var mongoClient *mongo.Client
-var dbName string
+func NewDbConn() (*pg.DB, error) {
+	ctx := context.Background()
+	user := os.Getenv("USER")
+	if user == "" {
+		return nil, errors.New("you must set your 'USER' environmental variable")
+	}
 
-func GetCollection(name string) *mongo.Collection {
-	return mongoClient.Database(dbName).Collection(name)
-}
-
-func StartMongoDb() error {
-	uri := os.Getenv("MONGODB_URI")
-	if uri == "" {
-		return errors.New("you must set your 'MONGODB_URI' environmental variable. See\n\t https://www.mongodb.com/docs/drivers/go/current/usage-examples/#environment-variable")
+	password := os.Getenv("PASSWORD")
+	if password == "" {
+		return nil, errors.New("you must set your 'PASSWORD' environmental variable")
 	}
 
 	database := os.Getenv("DATABASE")
 	if database == "" {
-		return errors.New("you must set your 'DATABASE' environmental variable")
-	} else {
-		dbName = database
+		return nil, errors.New("you must set your 'DATABASE' environmental variable")
 	}
 
-	var err error
-	mongoClient, err = mongo.Connect(context.Background(), options.Client().ApplyURI(uri))
-	if err != nil {
-		panic(err)
+	options := &pg.Options{
+		User:     user,
+		Password: password,
+		Database: database,
 	}
 
-	err = mongoClient.Ping(context.Background(), nil)
-	if err != nil {
-		return errors.New("can't verify a connection")
+	db := pg.Connect(options)
+	if db == nil {
+		return nil, errors.New("failed to connect to database")
 	}
 
-	return nil
-}
-
-func CloseMongoDb() {
-	err := mongoClient.Disconnect(context.Background())
-	if err != nil {
-		panic(err)
+	if err := db.Ping(ctx); err != nil {
+		return nil, err
 	}
+
+	return db, nil
 }
