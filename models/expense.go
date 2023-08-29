@@ -1,16 +1,27 @@
 package models
 
-import "go.mongodb.org/mongo-driver/bson/primitive"
+import (
+	"fmt"
+	"time"
+)
 
 type ExpenseType struct {
-	ID   primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
-	Name string             `bson:"name" json:"name"`
+	ID   int64  `json:"id"`
+	Name string `json:"name"`
+}
+type Expense struct {
+	ID            int64        `json:"id"`
+	Amount        float64      `json:"amount"`
+	Note          string       `json:"description"`
+	Date          time.Time    `json:"date"`
+	ExpenseType   *ExpenseType `pg:"rel:has-one" json:"expense_type"`
+	ExpenseTypeID int64        `json:"expense_type_id"`
 }
 
-type Expense struct {
-	ID          primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
-	ExpenseType primitive.ObjectID `bson:"expense_type" json:"expense_type"`
-	Amount      float64            `bson:"amount" json:"amount"`
-	Note        string             `bson:"note" json:"note"`
-	Date        string             `bson:"date" json:"date"`
+func (et *ExpenseType) PrintExpenseType() string {
+	return fmt.Sprintf("ExpenseType<%d %s>", et.ID, et.Name)
+}
+
+func (e *Expense) PrintExpense() string {
+	return fmt.Sprintf("Expense<%d %f %s %s %v>", e.ID, e.Amount, e.Note, e.Date, e.ExpenseType)
 }
