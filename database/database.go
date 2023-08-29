@@ -6,23 +6,31 @@ import (
 	"os"
 
 	"github.com/go-pg/pg/v11"
+	"github.com/go-pg/pg/v11/orm"
 )
 
-func NewDbConn() (*pg.DB, error) {
+var DB *pg.DB
+
+func GetModel(model interface{}) *orm.Query {
+	return DB.Model(model)
+}
+
+func NewDbConn() error {
 	ctx := context.Background()
+
 	user := os.Getenv("USER")
 	if user == "" {
-		return nil, errors.New("you must set your 'USER' environmental variable")
+		return errors.New("you must set your 'USER' environmental variable")
 	}
 
 	password := os.Getenv("PASSWORD")
 	if password == "" {
-		return nil, errors.New("you must set your 'PASSWORD' environmental variable")
+		return errors.New("you must set your 'PASSWORD' environmental variable")
 	}
 
 	database := os.Getenv("DATABASE")
 	if database == "" {
-		return nil, errors.New("you must set your 'DATABASE' environmental variable")
+		return errors.New("you must set your 'DATABASE' environmental variable")
 	}
 
 	options := &pg.Options{
@@ -31,14 +39,16 @@ func NewDbConn() (*pg.DB, error) {
 		Database: database,
 	}
 
-	db := pg.Connect(options)
-	if db == nil {
-		return nil, errors.New("failed to connect to database")
+	DB = pg.Connect(options)
+
+	if err := DB.Ping(ctx); err != nil {
+		return err
 	}
 
-	if err := db.Ping(ctx); err != nil {
-		return nil, err
-	}
+	return nil
+}
 
-	return db, nil
+func CloseConn() {
+	ctx := context.Background()
+	DB.Close(ctx)
 }
