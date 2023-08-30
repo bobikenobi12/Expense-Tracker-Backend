@@ -4,6 +4,7 @@ import (
 	"ExpenseTracker/config"
 	"ExpenseTracker/database"
 	"ExpenseTracker/router"
+	"context"
 	"log"
 	"os"
 
@@ -13,6 +14,8 @@ import (
 )
 
 func SetupAndRunApp() error {
+	ctx := context.Background()
+
 	if err := config.LoadENV(); err != nil {
 		return err
 	}
@@ -22,6 +25,10 @@ func SetupAndRunApp() error {
 	}
 
 	defer database.CloseConn()
+
+	if err := database.CreateSchema(ctx); err != nil {
+		return err
+	}
 
 	app := fiber.New()
 

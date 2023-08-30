@@ -1,6 +1,7 @@
 package database
 
 import (
+	"ExpenseTracker/models"
 	"context"
 	"errors"
 	"os"
@@ -11,8 +12,22 @@ import (
 
 var DB *pg.DB
 
-func GetModel(model interface{}) *orm.Query {
-	return DB.Model(model)
+func CreateSchema(ctx context.Context) error {
+	models := []interface{}{
+		(*models.Expense)(nil),
+		(*models.ExpenseType)(nil),
+	}
+
+	for _, model := range models {
+		err := DB.Model(model).CreateTable(ctx, &orm.CreateTableOptions{
+			IfNotExists: true,
+		})
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func NewDbConn() error {
