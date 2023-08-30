@@ -11,7 +11,7 @@ func SetUpRoutes(app *fiber.App) {
 
 	expenses := app.Group("/expenses")
 
-	// expenses.Get("/", handlers.GetAllExpenses)
-	// expenses.Get("/:id", handlers.GetExpenseByID)
+	expenses.Post("/types", handlers.InsertExpenseType)
 	expenses.Post("/", handlers.InsertExpense)
+	expenses.Get("/:id", handlers.SelectExpenseByID)
 }

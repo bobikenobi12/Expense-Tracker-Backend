@@ -2,32 +2,73 @@ package handlers
 
 import (
 	"ExpenseTracker/database"
+	"ExpenseTracker/models"
 	"context"
+	"log"
 
 	"github.com/gofiber/fiber/v2"
 )
 
-type InsertExpenseType struct {
-	Amount float64 `json:"amount"`
-	Note   string  `json:"note"`
-	// ExpenseTypeID int64   `json:"expense_type_id"`
-}
-
-func InsertExpense(c *fiber.Ctx) error {
+func InsertExpenseType(c *fiber.Ctx) error {
 	ctx := context.Background()
 
-	expense := new(InsertExpenseType)
-	if err := c.BodyParser(expense); err != nil {
+	expenseType := &models.ExpenseType{}
+	if err := c.BodyParser(expenseType); err != nil {
 		return err
 	}
 
-	_, err := database.DB.Model(expense).Returning("id").Insert(ctx)
+	result, err := database.DB.Model(expenseType).Returning("id").Insert(ctx)
 	if err != nil {
+		log.Println("error inserting expense type", err)
 		return err
 	}
 
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"status": "success",
-		// "data":   result.RowsReturned(),
+		"data":   result.RowsReturned(),
+	})
+}
+
+func InsertExpense(c *fiber.Ctx) error {
+	ctx := context.Background()
+
+	expense := &models.Expense{}
+
+	if err := c.BodyParser(expense); err != nil {
+		return err
+	}
+
+	if err := expense.BeforeInsert(); err != nil {
+		return err
+	}
+
+	result, err := database.DB.Model(expense).Returning("id").Insert(ctx)
+	if err != nil {
+		return err
+	}
+
+	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
+		"status":  "success",
+		"expense": result.RowsReturned(),
+	})
+}
+
+func SelectExpenseByID(c *fiber.Ctx) error {
+	ctx := context.Background()
+
+	expense := &models.Expense{}
+
+	id := c.Params("id")
+
+	if err := database.DB.Model(expense).Relation("ExpenseType").Where("expense.id = ?", id).Select(ctx); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status":  "error",
+			"message": "invalid expense id",
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"status":  "success",
+		"expense": expense,
 	})
 }

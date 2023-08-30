@@ -12,8 +12,8 @@ type ExpenseType struct {
 type Expense struct {
 	ID            int64        `json:"id"`
 	Amount        float64      `json:"amount"`
-	Note          string       `json:"description"`
-	Date          time.Time    `json:"date"`
+	Note          string       `json:"note"`
+	Date          time.Time    `json:"date" pg:"default:now()"`
 	ExpenseType   *ExpenseType `pg:"rel:has-one" json:"expense_type"`
 	ExpenseTypeID int64        `json:"expense_type_id"`
 }
@@ -23,5 +23,10 @@ func (et *ExpenseType) PrintExpenseType() string {
 }
 
 func (e *Expense) PrintExpense() string {
-	return fmt.Sprintf("Expense<%d %f %s %s %v>", e.ID, e.Amount, e.Note, e.Date, e.ExpenseType)
+	return fmt.Sprintf("Expense<%d %f %s %s %v %d>", e.ID, e.Amount, e.Note, e.Date, e.ExpenseType, e.ExpenseTypeID)
+}
+
+func (e *Expense) BeforeInsert() error {
+	e.Date = time.Now()
+	return nil
 }
