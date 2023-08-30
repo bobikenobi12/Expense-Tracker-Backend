@@ -17,6 +17,10 @@ func InsertExpenseType(c *fiber.Ctx) error {
 		return err
 	}
 
+	if err := expenseType.BeforeInsert(); err != nil {
+		return err
+	}
+
 	result, err := database.DB.Model(expenseType).Returning("id").Insert(ctx)
 	if err != nil {
 		log.Println("error inserting expense type", err)

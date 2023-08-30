@@ -6,9 +6,11 @@ import (
 )
 
 type ExpenseType struct {
-	ID   int64  `json:"id"`
-	Name string `json:"name"`
+	ID        int64     `json:"id"`
+	Name      string    `json:"name"`
+	CreatedAt time.Time `json:"created_at" pg:"default:now()"`
 }
+
 type Expense struct {
 	ID            int64        `json:"id"`
 	Amount        float64      `json:"amount"`
@@ -28,5 +30,10 @@ func (e *Expense) PrintExpense() string {
 
 func (e *Expense) BeforeInsert() error {
 	e.Date = time.Now()
+	return nil
+}
+
+func (et *ExpenseType) BeforeInsert() error {
+	et.CreatedAt = time.Now()
 	return nil
 }
