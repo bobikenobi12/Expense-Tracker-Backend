@@ -9,8 +9,12 @@ import (
 func SetUpRoutes(app *fiber.App) {
 	app.Get("/health", handlers.Health)
 
-	expenses := app.Group("/expenses")
+	api := app.Group("/api")
 
+	auth := api.Group("/auth")
+	auth.Post("/sign-up", handlers.SignUpHandler)
+
+	expenses := api.Group("/expenses")
 	expenses.Post("/types", handlers.InsertExpenseType)
 	expenses.Post("/", handlers.InsertExpense)
 	expenses.Get("/:id", handlers.SelectExpenseByID)
