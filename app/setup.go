@@ -30,7 +30,11 @@ func SetupAndRunApp() error {
 		return err
 	}
 
-	app := fiber.New()
+	app := fiber.New(fiber.Config{
+		ErrorHandler: config.GlobalErrorHandler,
+	})
+
+	config.InitValidations()
 
 	app.Use(recover.New())
 	app.Use(logger.New(logger.Config{
