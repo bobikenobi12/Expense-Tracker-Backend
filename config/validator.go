@@ -10,6 +10,13 @@ import (
 )
 
 type (
+	SignUpRequest struct {
+		Name        string `json:"name" validate:"required,min=2,max=100"`
+		Email       string `json:"email" validate:"required,email"`
+		CountryCode string `json:"country_code" validate:"required,oneof=BG US"`
+		Password    string `json:"password" validate:"required,min=8,max=100"`
+	}
+
 	ErrorResponse struct {
 		Error       bool
 		FailedField string

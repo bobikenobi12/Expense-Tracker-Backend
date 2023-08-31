@@ -16,6 +16,8 @@ func CreateSchema(ctx context.Context) error {
 	models := []interface{}{
 		(*models.Expense)(nil),
 		(*models.ExpenseType)(nil),
+		(*models.User)(nil),
+		(*models.UserSecrets)(nil),
 	}
 
 	for _, model := range models {
