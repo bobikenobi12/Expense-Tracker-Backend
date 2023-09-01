@@ -4,13 +4,12 @@ import (
 	"ExpenseTracker/config"
 	"ExpenseTracker/database"
 	"ExpenseTracker/models"
-	"context"
 
 	"github.com/gofiber/fiber/v2"
 )
 
 func SignUpHandler(c *fiber.Ctx) error {
-	ctx := context.Background()
+	ctx := c.Context()
 
 	signUp := &config.SignUpRequest{}
 

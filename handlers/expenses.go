@@ -9,7 +9,7 @@ import (
 )
 
 func InsertExpenseType(c *fiber.Ctx) error {
-	ctx := context.Background()
+	ctx := c.Context()
 
 	expenseType := &models.ExpenseType{}
 	if err := c.BodyParser(expenseType); err != nil {
@@ -56,7 +56,7 @@ func InsertExpense(c *fiber.Ctx) error {
 }
 
 func SelectExpenseByID(c *fiber.Ctx) error {
-	ctx := context.Background()
+	ctx := c.Context()
 
 	expense := &models.Expense{}
 
