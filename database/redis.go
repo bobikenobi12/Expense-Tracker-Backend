@@ -15,6 +15,7 @@ func ConnectRedis() error {
 	if redisAddr == "" {
 		redisAddr = "localhost:6379"
 	}
+
 	RedisClient = redis.NewClient(&redis.Options{
 		Addr:     redisAddr,
 		Password: "",

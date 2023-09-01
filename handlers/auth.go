@@ -59,3 +59,50 @@ func SignUpHandler(c *fiber.Ctx) error {
 		"data":   user,
 	})
 }
+
+func LoginHandler(c *fiber.Ctx) error {
+	ctx := c.Context()
+
+	login := &config.LoginRequest{}
+
+	if err := c.BodyParser(login); err != nil {
+		return err
+	}
+
+	if err := config.ValidationResponse(login); err != nil {
+		return err
+	}
+
+	user := &models.User{}
+
+	if err := database.PsqlDb.Model(user).Where("email = ?", login.Email).Select(ctx); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status":  "error",
+			"message": "A user with this email does not exist",
+		})
+	}
+
+	userSecrets := &models.UserSecrets{
+		ID: user.UserSecretsId,
+	}
+
+	if err := database.PsqlDb.Model(userSecrets).WherePK().Select(ctx); err != nil {
+		return err
+	}
+
+	match := config.CheckPasswordHash(login.Password, userSecrets.Password)
+
+	if !match {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status":  "error",
+			"message": "Incorrect password",
+		})
+	}
+
+	config.SetJwtsToCookies(c, user.Email, user.Name)
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"status": "success",
+		"msg":    "Logged in",
+	})
+}

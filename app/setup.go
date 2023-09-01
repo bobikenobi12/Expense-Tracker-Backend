@@ -7,11 +7,9 @@ import (
 	"context"
 	"log"
 	"os"
-	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
-	"github.com/gofiber/fiber/v2/middleware/csrf"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 )
@@ -54,10 +52,10 @@ func SetupAndRunApp() error {
 		AllowHeaders: "Origin, Content-Type, Accept",
 	}))
 
-	app.Use(csrf.New(csrf.Config{
-		CookieHTTPOnly: true,
-		Expiration:     time.Minute * 15,
-	}))
+	// app.Use(csrf.New(csrf.Config{
+	// 	CookieHTTPOnly: true,
+	// 	Expiration:     time.Minute * 15,
+	// }))
 
 	app.Use(logger.New(logger.Config{
 		Format: "[${ip}]:${port} ${status} - ${method} ${path} ${latency}\n",

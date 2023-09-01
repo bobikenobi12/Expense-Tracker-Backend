@@ -13,6 +13,7 @@ func SetUpRoutes(app *fiber.App) {
 
 	auth := api.Group("/auth")
 	auth.Post("/sign-up", handlers.SignUpHandler)
+	auth.Post("/login", handlers.LoginHandler)
 
 	expenses := api.Group("/expenses")
 	expenses.Post("/types", handlers.InsertExpenseType)
