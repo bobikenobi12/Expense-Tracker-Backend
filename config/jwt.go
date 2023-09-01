@@ -1,9 +1,12 @@
 package config
 
 import (
+	"ExpenseTracker/database"
+	"ExpenseTracker/models"
 	"os"
 	"time"
 
+	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
 )
 
@@ -44,4 +47,37 @@ func GenerateJWT(email string, name string, experation time.Time) (string, error
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
 	return token.SignedString([]byte(key))
+}
+
+func WhitelistJwt(c *fiber.Ctx, jwt string, expiration time.Time) error {
+	ctx := c.Context()
+
+	jwtWhitelist := &models.JwtWhitelist{
+		Jwt:       jwt,
+		ExpiresAt: expiration,
+	}
+
+	if err := jwtWhitelist.BeforeInsert(); err != nil {
+		return err
+	}
+
+	if _, err := database.PsqlDb.Model(jwtWhitelist).Insert(ctx); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func BlacklistJwt(c *fiber.Ctx, jwt string) error {
+	ctx := c.Context()
+
+	jwtBlacklist := &models.JwtBlacklist{
+		Jwt: jwt,
+	}
+
+	if _, err := database.PsqlDb.Model(jwtBlacklist).Insert(ctx); err != nil {
+		return err
+	}
+
+	return nil
 }

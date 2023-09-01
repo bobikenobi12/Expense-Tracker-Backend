@@ -20,7 +20,7 @@ func InsertExpenseType(c *fiber.Ctx) error {
 		return err
 	}
 
-	result, err := database.DB.Model(expenseType).Returning("id").Insert(ctx)
+	result, err := database.PsqlDb.Model(expenseType).Returning("id").Insert(ctx)
 	if err != nil {
 		return err
 	}
@@ -44,7 +44,7 @@ func InsertExpense(c *fiber.Ctx) error {
 		return err
 	}
 
-	result, err := database.DB.Model(expense).Returning("id").Insert(ctx)
+	result, err := database.PsqlDb.Model(expense).Returning("id").Insert(ctx)
 	if err != nil {
 		return err
 	}
@@ -62,7 +62,7 @@ func SelectExpenseByID(c *fiber.Ctx) error {
 
 	id := c.Params("id")
 
-	if err := database.DB.Model(expense).Relation("ExpenseType").Where("expense.id = ?", id).Select(ctx); err != nil {
+	if err := database.PsqlDb.Model(expense).Relation("ExpenseType").Where("expense.id = ?", id).Select(ctx); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"status":  "error",
 			"message": "invalid expense id",

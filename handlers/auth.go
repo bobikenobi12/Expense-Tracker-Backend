@@ -40,7 +40,7 @@ func SignUpHandler(c *fiber.Ctx) error {
 		return err
 	}
 
-	if _, err := database.DB.Model(userSecrets).Insert(ctx); err != nil {
+	if _, err := database.PsqlDb.Model(userSecrets).Insert(ctx); err != nil {
 		return err
 	}
 
@@ -50,7 +50,7 @@ func SignUpHandler(c *fiber.Ctx) error {
 		return err
 	}
 
-	if _, err := database.DB.Model(user).Insert(ctx); err != nil {
+	if _, err := database.PsqlDb.Model(user).Insert(ctx); err != nil {
 		return err
 	}
 

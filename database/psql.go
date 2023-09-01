@@ -10,7 +10,7 @@ import (
 	"github.com/go-pg/pg/v11/orm"
 )
 
-var DB *pg.DB
+var PsqlDb *pg.DB
 
 func CreateSchema(ctx context.Context) error {
 	models := []interface{}{
@@ -18,10 +18,12 @@ func CreateSchema(ctx context.Context) error {
 		(*models.ExpenseType)(nil),
 		(*models.User)(nil),
 		(*models.UserSecrets)(nil),
+		(*models.JwtWhitelist)(nil),
+		(*models.JwtBlacklist)(nil),
 	}
 
 	for _, model := range models {
-		err := DB.Model(model).CreateTable(ctx, &orm.CreateTableOptions{
+		err := PsqlDb.Model(model).CreateTable(ctx, &orm.CreateTableOptions{
 			IfNotExists: true,
 		})
 		if err != nil {
@@ -32,20 +34,20 @@ func CreateSchema(ctx context.Context) error {
 	return nil
 }
 
-func NewDbConn() error {
+func NewPsqlDbConn() error {
 	ctx := context.Background()
 
-	user := os.Getenv("USER")
+	user := os.Getenv("PSQL_USER")
 	if user == "" {
 		return errors.New("you must set your 'USER' environmental variable")
 	}
 
-	password := os.Getenv("PASSWORD")
+	password := os.Getenv("PSQL_PASSWORD")
 	if password == "" {
 		return errors.New("you must set your 'PASSWORD' environmental variable")
 	}
 
-	database := os.Getenv("DATABASE")
+	database := os.Getenv("PSQL_DATABASE")
 	if database == "" {
 		return errors.New("you must set your 'DATABASE' environmental variable")
 	}
@@ -56,16 +58,16 @@ func NewDbConn() error {
 		Database: database,
 	}
 
-	DB = pg.Connect(options)
+	PsqlDb = pg.Connect(options)
 
-	if err := DB.Ping(ctx); err != nil {
+	if err := PsqlDb.Ping(ctx); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func CloseConn() {
+func ClosePsqlConn() {
 	ctx := context.Background()
-	DB.Close(ctx)
+	PsqlDb.Close(ctx)
 }

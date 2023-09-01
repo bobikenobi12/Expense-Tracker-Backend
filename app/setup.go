@@ -23,11 +23,15 @@ func SetupAndRunApp() error {
 		return err
 	}
 
-	if err := database.NewDbConn(); err != nil {
+	if err := database.NewPsqlDbConn(); err != nil {
 		return err
 	}
 
-	defer database.CloseConn()
+	if err := database.ConnectRedis(); err != nil {
+		return err
+	}
+
+	defer database.ClosePsqlConn()
 
 	if err := database.CreateSchema(ctx); err != nil {
 		return err

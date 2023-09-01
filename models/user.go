@@ -9,6 +9,18 @@ type UserSecrets struct {
 	UpdatedAt time.Time
 }
 
+type UserSession struct {
+	ID             int64         `json:"id"`
+	UserId         int64         `json:"user_id"`
+	SessionId      string        `json:"session_id"`
+	JwtWhitelistId int64         `json:"jwt_whitelist_id"`
+	JwtWhitelist   *JwtWhitelist `json:"jwt_whitelist" pg:"rel:has-one"`
+	JwtBlacklistId int64         `json:"jwt_blacklist_id"`
+	JwtBlacklist   *JwtBlacklist `json:"jwt_blacklist" pg:"rel:has-one"`
+	CreatedAt      time.Time     `json:"created_at" pg:"default:now()"`
+	UpdatedAt      time.Time     `json:"updated_at" pg:"default:now()"`
+}
+
 type User struct {
 	ID            int64        `json:"id"`
 	Name          string       `json:"name"`
