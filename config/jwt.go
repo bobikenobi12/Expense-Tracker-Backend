@@ -1,8 +1,6 @@
 package config
 
 import (
-	"ExpenseTracker/database"
-	"ExpenseTracker/models"
 	"os"
 	"time"
 
@@ -16,16 +14,31 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
-func IssueJwt(email string, name string) (string, error) {
-	expiration := time.Now().Add(time.Minute * 15)
+func SetJwtsToCookies(c *fiber.Ctx, email string, name string) {
+	tokenJwt, err := GenerateJWT(email, name, time.Now().Add(time.Minute*15))
 
-	return GenerateJWT(email, name, expiration)
-}
+	if err != nil {
+		GlobalErrorHandler(c, err)
+	}
 
-func RefreshJwt(email string, name string) (string, error) {
-	expiration := time.Now().Add(time.Hour * 24 * 7)
+	refreshJwt, err := GenerateJWT(email, name, time.Now().Add(time.Hour*24*7))
 
-	return GenerateJWT(email, name, expiration)
+	if err != nil {
+		GlobalErrorHandler(c, err)
+	}
+
+	c.Cookie(&fiber.Cookie{
+		Name:     "token",
+		Value:    tokenJwt,
+		Expires:  time.Now().Add(time.Minute * 15),
+		HTTPOnly: true,
+	})
+	c.Cookie(&fiber.Cookie{
+		Name:     "refresh_token",
+		Value:    refreshJwt,
+		Expires:  time.Now().Add(time.Hour * 24 * 7),
+		HTTPOnly: true,
+	})
 }
 
 func GenerateJWT(email string, name string, experation time.Time) (string, error) {
@@ -47,37 +60,4 @@ func GenerateJWT(email string, name string, experation time.Time) (string, error
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
 	return token.SignedString([]byte(key))
-}
-
-func WhitelistJwt(c *fiber.Ctx, jwt string, expiration time.Time) error {
-	ctx := c.Context()
-
-	jwtWhitelist := &models.JwtWhitelist{
-		Jwt:       jwt,
-		ExpiresAt: expiration,
-	}
-
-	if err := jwtWhitelist.BeforeInsert(); err != nil {
-		return err
-	}
-
-	if _, err := database.PsqlDb.Model(jwtWhitelist).Insert(ctx); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func BlacklistJwt(c *fiber.Ctx, jwt string) error {
-	ctx := c.Context()
-
-	jwtBlacklist := &models.JwtBlacklist{
-		Jwt: jwt,
-	}
-
-	if _, err := database.PsqlDb.Model(jwtBlacklist).Insert(ctx); err != nil {
-		return err
-	}
-
-	return nil
 }

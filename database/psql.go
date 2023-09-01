@@ -18,8 +18,6 @@ func CreateSchema(ctx context.Context) error {
 		(*models.ExpenseType)(nil),
 		(*models.User)(nil),
 		(*models.UserSecrets)(nil),
-		(*models.JwtWhitelist)(nil),
-		(*models.JwtBlacklist)(nil),
 	}
 
 	for _, model := range models {
