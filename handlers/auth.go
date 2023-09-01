@@ -21,6 +21,13 @@ func SignUpHandler(c *fiber.Ctx) error {
 		return err
 	}
 
+	if err := database.CheckIfEmailExists(signUp.Email); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status":  "error",
+			"message": err.Error(),
+		})
+	}
+
 	user := &models.User{
 		Email:       signUp.Email,
 		Name:        signUp.Name,

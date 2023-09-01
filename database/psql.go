@@ -69,3 +69,21 @@ func ClosePsqlConn() {
 	ctx := context.Background()
 	PsqlDb.Close(ctx)
 }
+
+func CheckIfEmailExists(email string) error {
+	ctx := context.Background()
+
+	user := &models.User{}
+
+	err := PsqlDb.Model(user).Where("email = ?", email).Select(ctx)
+	switch err {
+	case pg.ErrNoRows:
+		return nil
+	case pg.ErrMultiRows:
+		return errors.New("a user with this email already exists")
+	case nil:
+		return errors.New("a user with this email already exists")
+	}
+
+	return err
+}
