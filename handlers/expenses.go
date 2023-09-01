@@ -4,7 +4,6 @@ import (
 	"ExpenseTracker/database"
 	"ExpenseTracker/models"
 	"context"
-	"log"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -23,7 +22,6 @@ func InsertExpenseType(c *fiber.Ctx) error {
 
 	result, err := database.DB.Model(expenseType).Returning("id").Insert(ctx)
 	if err != nil {
-		log.Println("error inserting expense type", err)
 		return err
 	}
 

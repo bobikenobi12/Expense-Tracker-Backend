@@ -5,7 +5,6 @@ import (
 	"ExpenseTracker/database"
 	"ExpenseTracker/models"
 	"context"
-	"log"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -29,20 +28,22 @@ func SignUpHandler(c *fiber.Ctx) error {
 		CountryCode: signUp.CountryCode,
 	}
 
+	hashedPassword, err := config.HashPassword(signUp.Password)
+	if err != nil {
+		return err
+	}
+
 	userSecrets := &models.UserSecrets{
-		Password: signUp.Password,
+		Password: hashedPassword,
 	}
 
 	if err := userSecrets.BeforeInsert(); err != nil {
-		log.Println(userSecrets)
 		return err
 	}
 
 	if _, err := database.DB.Model(userSecrets).Insert(ctx); err != nil {
 		return err
 	}
-
-	log.Println(userSecrets)
 
 	user.UserSecretsId = userSecrets.ID
 
