@@ -12,6 +12,7 @@ type User struct {
 	ID            int64        `json:"id"`
 	Name          string       `json:"name"`
 	Email         string       `json:"email"`
+	ProfilePic    string       `json:"profile_pic"`
 	CountryCode   string       `json:"country_code"`
 	CreatedAt     time.Time    `json:"created_at" pg:"default:now()"`
 	UpdatedAt     time.Time    `json:"updated_at" pg:"default:now()"`

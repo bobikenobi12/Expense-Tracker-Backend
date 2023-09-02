@@ -16,7 +16,6 @@ type (
 		CountryCode string `json:"country_code" validate:"required,oneof=BG US"`
 		Password    string `json:"password" validate:"required,min=8,max=100"`
 	}
-
 	LoginRequest struct {
 		Email    string `json:"email" validate:"required,email"`
 		Password string `json:"password" validate:"required,min=8,max=100"`

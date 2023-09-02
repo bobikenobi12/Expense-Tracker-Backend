@@ -29,6 +29,12 @@ func SetupAndRunApp() error {
 		return err
 	}
 
+	err := config.S3()
+
+	if err != nil {
+		return err
+	}
+
 	defer database.ClosePsqlConn()
 
 	if err := database.CreateSchema(ctx); err != nil {
