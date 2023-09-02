@@ -15,7 +15,7 @@ import (
 type JwtConfig struct {
 	Filter      func(c *fiber.Ctx) bool
 	Unathorized func(c *fiber.Ctx, err error) error
-	Decode      func(c *fiber.Ctx) (*jwt.MapClaims, error)
+	Decode      func(c *fiber.Ctx, cookieType string) (*jwt.MapClaims, error)
 	Secret      string
 	Expiry      int64
 }
@@ -31,6 +31,7 @@ var JwtConfigDefault = JwtConfig{
 type CustomClaims struct {
 	Email string `json:"email"`
 	Name  string `json:"name"`
+	Id    string `json:"id"`
 	jwt.RegisteredClaims
 }
 
@@ -45,10 +46,45 @@ func New(config JwtConfig) fiber.Handler {
 		}
 		fmt.Println("Middleware executed")
 
-		claims, err := cfg.Decode(c)
+		tokenClaims, err := cfg.Decode(c, "token")
 
 		if err == nil {
-			c.Locals("jwtClaims", *claims)
+			c.Locals("jwtClaims", *tokenClaims)
+			return c.Next()
+		}
+
+		refreshTokenClaims, err := cfg.Decode(c, "refresh_token")
+
+		if err == nil {
+			newToken, err := Encode(refreshTokenClaims, 60*15)
+
+			if err != nil {
+				return cfg.Unathorized(c, err)
+			}
+
+			blacklisted, err := database.RedisClient.Get(c.Context(), newToken).Result()
+
+			if err != nil {
+				if err == redis.Nil {
+					log.Println("key does not exist")
+				} else {
+					return cfg.Unathorized(c, errors.New("error checking if token is blacklisted"))
+				}
+			}
+
+			if blacklisted == "blacklisted" {
+				return cfg.Unathorized(c, errors.New("token is blacklisted"))
+			}
+
+			c.Cookie(&fiber.Cookie{
+				Name:     "token",
+				Value:    newToken,
+				Expires:  time.Now().Add(time.Minute * 15).UTC(),
+				HTTPOnly: true,
+			})
+
+			c.Locals("jwtClaims", *refreshTokenClaims)
+
 			return c.Next()
 		}
 
@@ -76,9 +112,9 @@ func configDefault(config ...JwtConfig) JwtConfig {
 	}
 
 	if cfg.Decode == nil {
-		cfg.Decode = func(c *fiber.Ctx) (*jwt.MapClaims, error) {
+		cfg.Decode = func(c *fiber.Ctx, cookieType string) (*jwt.MapClaims, error) {
 
-			cookieToken := c.Cookies("token")
+			cookieToken := c.Cookies(cookieType)
 
 			if cookieToken == "" {
 				return nil, errors.New("missing auth token")
@@ -168,7 +204,7 @@ func BlacklistJwt(c *fiber.Ctx) {
 	token := c.Cookies("token")
 
 	if token != "" {
-		database.RedisClient.Set(c.Context(), token, "blacklisted", time.Minute*15)
+		database.RedisClient.Set(c.Context(), token, "blacklisted", time.Minute)
 	}
 }
 
