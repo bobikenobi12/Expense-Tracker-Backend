@@ -9,11 +9,12 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/redis/go-redis/v9"
 )
 
 type JwtConfig struct {
 	Filter      func(c *fiber.Ctx) bool
-	Unathorized fiber.Handler
+	Unathorized func(c *fiber.Ctx, err error) error
 	Decode      func(c *fiber.Ctx) (*jwt.MapClaims, error)
 	Secret      string
 	Expiry      int64
@@ -51,7 +52,7 @@ func New(config JwtConfig) fiber.Handler {
 			return c.Next()
 		}
 
-		return cfg.Unathorized(c)
+		return cfg.Unathorized(c, err)
 	}
 }
 
@@ -79,10 +80,23 @@ func configDefault(config ...JwtConfig) JwtConfig {
 
 			cookieToken := c.Cookies("token")
 
-			log.Println("cookieToken", cookieToken)
-
 			if cookieToken == "" {
 				return nil, errors.New("missing auth token")
+			}
+
+			blacklisted, err := database.RedisClient.Get(c.Context(), cookieToken).Result()
+
+			if err != nil {
+				if err == redis.Nil {
+					log.Println("key does not exist")
+
+				} else {
+					return nil, errors.New("error checking if token is blacklisted")
+				}
+			}
+
+			if blacklisted == "blacklisted" {
+				return nil, errors.New("token is blacklisted")
 			}
 
 			token, err := jwt.Parse(cookieToken, func(token *jwt.Token) (interface{}, error) {
@@ -112,8 +126,11 @@ func configDefault(config ...JwtConfig) JwtConfig {
 	}
 
 	if cfg.Unathorized == nil {
-		cfg.Unathorized = func(c *fiber.Ctx) error {
-			return c.SendStatus(fiber.StatusUnauthorized)
+		cfg.Unathorized = func(c *fiber.Ctx, err error) error {
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+				"status":  "error",
+				"message": err.Error(),
+			})
 		}
 	}
 

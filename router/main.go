@@ -3,7 +3,6 @@ package router
 import (
 	"ExpenseTracker/config"
 	"ExpenseTracker/handlers"
-	"os"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -17,9 +16,7 @@ func SetUpRoutes(app *fiber.App) {
 	auth.Post("/sign-up", handlers.SignUpHandler)
 	auth.Post("/login", handlers.LoginHandler)
 
-	app.Use(config.New(config.JwtConfig{
-		Secret: os.Getenv("JWT_SECRET"),
-	}))
+	app.Use(config.New(config.JwtConfig{}))
 
 	auth.Get("/logout", handlers.LogoutHandler)
 

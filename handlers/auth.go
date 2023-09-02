@@ -122,6 +122,8 @@ func LoginHandler(c *fiber.Ctx) error {
 func LogoutHandler(c *fiber.Ctx) error {
 	config.BlacklistJwt(c)
 
+	c.ClearCookie()
+
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"status": "success",
 		"msg":    "Logged out",
