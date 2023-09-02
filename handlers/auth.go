@@ -6,6 +6,7 @@ import (
 	"ExpenseTracker/models"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 func SignUpHandler(c *fiber.Ctx) error {
@@ -106,7 +107,11 @@ func LoginHandler(c *fiber.Ctx) error {
 		})
 	}
 
-	config.SetJwtsToCookies(c, user.Email, user.Name)
+	config.SetJwtsToCookies(c, &jwt.MapClaims{
+		"email": user.Email,
+		"name":  user.Name,
+		"id":    user.ID,
+	})
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"status": "success",
