@@ -146,3 +146,52 @@ func GetProfile(c *fiber.Ctx) error {
 	})
 
 }
+
+func UpdateProfile(c *fiber.Ctx) error {
+	ctx := c.Context()
+
+	claimData := c.Locals("jwtClaims").(jwt.MapClaims)
+
+	if claimData == nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"status":  "error",
+			"message": "Jwt was bypassed",
+		})
+	}
+
+	userId := claimData["id"].(float64)
+
+	updateFields := &config.UpdateProfileRequest{}
+
+	if err := c.BodyParser(updateFields); err != nil {
+		return err
+	}
+
+	if err := config.ValidationResponse(updateFields); err != nil {
+		return err
+	}
+
+	user := &models.User{}
+
+	result, err := database.PsqlDb.Model(user).Set("name = ?", updateFields.Name).Set("country_code = ?", updateFields.CountryCode).Where("id = ?", userId).Update(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	if result.RowsAffected() == 0 {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"status":  "error",
+			"message": "User not found",
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"status":  "success",
+		"message": "User updated successfully",
+		"data": fiber.Map{
+			"name":         updateFields.Name,
+			"country_code": updateFields.CountryCode,
+		},
+	})
+}
