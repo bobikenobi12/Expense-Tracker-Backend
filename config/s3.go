@@ -15,6 +15,9 @@ var uploader *s3manager.Uploader
 
 func S3() error {
 	credentials := aws.NewConfig().Credentials
+	if os.Getenv("AWS_ACCESS_KEY_ID") == "" && os.Getenv("AWS_SECRET_ACCESS_KEY") == "" {
+		return errors.New("no AWS credentials found. Please set AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY")
+	}
 	region := os.Getenv("S3_REGION")
 
 	if region == "" {
@@ -36,21 +39,16 @@ func S3() error {
 	return nil
 }
 
-func UploadToS3Bucket(file *multipart.File) (*s3manager.UploadOutput, error) {
+func UploadToS3Bucket(file *multipart.File, filename string) (*s3manager.UploadOutput, error) {
 	bucket := os.Getenv("S3_BUCKET")
-	key := os.Getenv("S3_KEY")
 
 	if bucket == "" {
 		return nil, errors.New("no S3 bucket found. Please set S3_BUCKET")
 	}
 
-	if key == "" {
-		return nil, errors.New("no S3 key found. Please set S3_KEY")
-	}
-
 	result, err := uploader.Upload(&s3manager.UploadInput{
 		Bucket: aws.String(bucket),
-		Key:    aws.String(key),
+		Key:    aws.String("profile_pics/" + filename),
 		Body:   *file,
 	})
 

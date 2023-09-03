@@ -59,7 +59,7 @@ func UploadProfilePic(c *fiber.Ctx) error {
 		})
 	}
 
-	uploadOutput, err := config.UploadToS3Bucket(&fileContent)
+	uploadOutput, err := config.UploadToS3Bucket(&fileContent, file.Filename)
 
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
