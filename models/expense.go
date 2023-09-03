@@ -1,7 +1,6 @@
 package models
 
 import (
-	"fmt"
 	"time"
 )
 
@@ -9,6 +8,7 @@ type ExpenseType struct {
 	ID        int64     `json:"id"`
 	Name      string    `json:"name"`
 	CreatedAt time.Time `json:"created_at" pg:"default:now()"`
+	UpdatedAt time.Time `json:"updated_at" pg:"default:now()"`
 }
 
 type Expense struct {
@@ -18,14 +18,7 @@ type Expense struct {
 	Date          time.Time    `json:"date" pg:"default:now()"`
 	ExpenseType   *ExpenseType `pg:"rel:has-one" json:"expense_type"`
 	ExpenseTypeID int64        `json:"expense_type_id"`
-}
-
-func (et *ExpenseType) PrintExpenseType() string {
-	return fmt.Sprintf("ExpenseType<%d %s>", et.ID, et.Name)
-}
-
-func (e *Expense) PrintExpense() string {
-	return fmt.Sprintf("Expense<%d %f %s %s %v %d>", e.ID, e.Amount, e.Note, e.Date, e.ExpenseType, e.ExpenseTypeID)
+	WorkspaceID   int64        `json:"workspace_id"`
 }
 
 func (e *Expense) BeforeInsert() error {
@@ -35,5 +28,6 @@ func (e *Expense) BeforeInsert() error {
 
 func (et *ExpenseType) BeforeInsert() error {
 	et.CreatedAt = time.Now()
+	et.UpdatedAt = time.Now()
 	return nil
 }
