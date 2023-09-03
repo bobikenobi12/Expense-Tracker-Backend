@@ -1,6 +1,7 @@
 package config
 
 import (
+	"ExpenseTracker/models"
 	"errors"
 	"mime/multipart"
 	"os"
@@ -39,7 +40,7 @@ func S3() error {
 	return nil
 }
 
-func UploadToS3Bucket(file *multipart.File, filename string) (*s3manager.UploadOutput, error) {
+func UploadToS3Bucket(file *multipart.File, filename string, fileType string) (*models.S3Object, error) {
 	bucket := os.Getenv("S3_BUCKET")
 
 	if bucket == "" {
@@ -50,6 +51,34 @@ func UploadToS3Bucket(file *multipart.File, filename string) (*s3manager.UploadO
 		Bucket: aws.String(bucket),
 		Key:    aws.String("profile_pics/" + filename),
 		Body:   *file,
+		ContentType: aws.String(
+			fileType,
+		),
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &models.S3Object{
+		ETag:      result.ETag,
+		VersionId: result.VersionID,
+		Location:  result.Location,
+		Key:       "profile_pics/" + filename,
+	}, nil
+}
+
+func GetObjectFromS3Bucket(s3Object *models.S3Object) (*s3.GetObjectOutput, error) {
+	bucket := os.Getenv("S3_BUCKET")
+
+	if bucket == "" {
+		return nil, errors.New("no S3 bucket found. Please set S3_BUCKET")
+	}
+
+	result, err := uploader.S3.GetObject(&s3.GetObjectInput{
+		Bucket:    aws.String(bucket),
+		Key:       aws.String(s3Object.Key),
+		VersionId: s3Object.VersionId,
 	})
 
 	if err != nil {

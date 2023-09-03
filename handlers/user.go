@@ -59,7 +59,7 @@ func UploadProfilePic(c *fiber.Ctx) error {
 		})
 	}
 
-	uploadOutput, err := config.UploadToS3Bucket(&fileContent, file.Filename)
+	uploadOutput, err := config.UploadToS3Bucket(&fileContent, file.Filename, fileType)
 
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -68,9 +68,16 @@ func UploadProfilePic(c *fiber.Ctx) error {
 		})
 	}
 
-	profilePicUrl := uploadOutput.Location
+	insertPicResult, err := database.PsqlDb.Model(uploadOutput).Returning("id").Insert(ctx)
 
-	result, err := database.PsqlDb.Model(&models.User{}).Set("profile_pic = ?", profilePicUrl).Where("id = ?", userId).Update(ctx)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"status":  "error",
+			"message": err.Error(),
+		})
+	}
+
+	result, err := database.PsqlDb.Model(&models.User{}).Set("profile_pic_id = ?", insertPicResult.RowsReturned()).Where("id = ?", userId).Update(ctx)
 
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -90,7 +97,10 @@ func UploadProfilePic(c *fiber.Ctx) error {
 		"status":  "success",
 		"message": "Profile pic uploaded successfully",
 		"data": fiber.Map{
-			"profile_pic": profilePicUrl,
+			"version_id": uploadOutput.VersionId,
+			"location":   uploadOutput.Location,
+			"etag":       uploadOutput.ETag,
+			"key":        uploadOutput.Key,
 		},
 	})
 }
