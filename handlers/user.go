@@ -195,3 +195,69 @@ func UpdateProfile(c *fiber.Ctx) error {
 		},
 	})
 }
+
+func ChangePassword(c *fiber.Ctx) error {
+	ctx := c.Context()
+
+	claimData := c.Locals("jwtClaims").(jwt.MapClaims)
+
+	if claimData == nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"status":  "error",
+			"message": "Jwt was bypassed",
+		})
+	}
+
+	userId := claimData["id"].(float64)
+
+	changePassword := &config.ChangePasswordRequest{}
+
+	if err := c.BodyParser(changePassword); err != nil {
+		return err
+	}
+
+	if err := config.ValidationResponse(changePassword); err != nil {
+		return err
+	}
+
+	userSecrets := &models.UserSecrets{
+		ID: int64(userId),
+	}
+
+	if err := database.PsqlDb.Model(userSecrets).WherePK().Select(ctx); err != nil {
+		return err
+	}
+
+	match := config.CheckPasswordHash(changePassword.OldPassword, userSecrets.Password)
+
+	if !match {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status":  "error",
+			"message": "Incorrect password",
+		})
+	}
+
+	hashedPassword, err := config.HashPassword(changePassword.NewPassword)
+
+	if err != nil {
+		return err
+	}
+
+	result, err := database.PsqlDb.Model(userSecrets).Set("password = ?", hashedPassword).WherePK().Update(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	if result.RowsAffected() == 0 {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"status":  "error",
+			"message": "User not found",
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"status":  "success",
+		"message": "Password changed successfully",
+	})
+}

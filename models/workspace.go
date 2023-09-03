@@ -34,11 +34,6 @@ type CurrencyUser struct {
 	UserId     int64 `json:"user_id"`
 }
 
-func (c *Currency) BeforeInsert() error {
-	c.IsoCode = "USD"
-	return nil
-}
-
 func (w *Workspace) BeforeInsert() error {
 	w.CreatedAt = time.Now().String()
 	w.UpdatedAt = time.Now().String()

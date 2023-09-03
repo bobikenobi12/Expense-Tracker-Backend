@@ -24,6 +24,10 @@ type (
 		Name        string `json:"name" validate:"required,min=2,max=100"`
 		CountryCode string `json:"country_code" validate:"required,oneof=BG US"`
 	}
+	ChangePasswordRequest struct {
+		OldPassword string `json:"old_password" validate:"required,min=8,max=100"`
+		NewPassword string `json:"new_password" validate:"required,min=8,max=100"`
+	}
 	ErrorResponse struct {
 		Error       bool
 		FailedField string
