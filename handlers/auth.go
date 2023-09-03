@@ -108,9 +108,10 @@ func LoginHandler(c *fiber.Ctx) error {
 	}
 
 	config.SetJwtsToCookies(c, &jwt.MapClaims{
-		"email": user.Email,
-		"name":  user.Name,
-		"id":    user.ID,
+		"email":       user.Email,
+		"name":        user.Name,
+		"id":          user.ID,
+		"prof_pic_id": user.ProfilePicId,
 	})
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{

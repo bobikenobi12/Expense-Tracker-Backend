@@ -23,6 +23,7 @@ func SetUpRoutes(app *fiber.App) {
 	user := api.Group("/user")
 
 	user.Post("/uploadProfilePic", handlers.UploadProfilePic)
+	user.Get("/profile", handlers.GetProfile)
 
 	expenses := api.Group("/expenses")
 	expenses.Post("/types", handlers.InsertExpenseType)

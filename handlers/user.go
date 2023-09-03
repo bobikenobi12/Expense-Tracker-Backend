@@ -104,3 +104,45 @@ func UploadProfilePic(c *fiber.Ctx) error {
 		},
 	})
 }
+
+func GetProfile(c *fiber.Ctx) error {
+	ctx := c.Context()
+
+	claimData := c.Locals("jwtClaims").(jwt.MapClaims)
+
+	if claimData == nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"status":  "error",
+			"message": "Jwt was bypassed",
+		})
+	}
+
+	profilePicId := claimData["prof_pic_id"].(float64)
+
+	user := &models.User{}
+
+	err := database.PsqlDb.Model(user).Relation("ProfilePic").Where("profile_pic.id = ?", profilePicId).Select(ctx)
+
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"status":  "error",
+			"message": err.Error(),
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"status": "success",
+		"data": fiber.Map{
+			"id":              user.ID,
+			"name":            user.Name,
+			"email":           user.Email,
+			"country_code":    user.CountryCode,
+			"created_at":      user.CreatedAt,
+			"updated_at":      user.UpdatedAt,
+			"profile_pic":     user.ProfilePic.Location,
+			"user_secrets":    user.UserSecrets,
+			"user_secrets_id": user.UserSecretsId,
+		},
+	})
+
+}
