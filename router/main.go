@@ -26,6 +26,7 @@ func SetUpRoutes(app *fiber.App) {
 	userProfile.Get("/", handlers.GetProfile)
 	userProfile.Post("/", handlers.UpdateProfile)
 	userProfile.Post("/pic", handlers.UploadProfilePic)
+	userProfile.Post("/password", handlers.ChangePassword)
 
 	expenses := api.Group("/expenses")
 	expenses.Post("/types", handlers.InsertExpenseType)

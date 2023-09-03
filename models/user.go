@@ -5,7 +5,6 @@ import "time"
 type UserSecrets struct {
 	ID        int64  `json:"id"`
 	Password  string `json:"password"`
-	CreatedAt time.Time
 	UpdatedAt time.Time
 }
 
@@ -42,7 +41,6 @@ func (u *User) BeforeUpdate() error {
 }
 
 func (us *UserSecrets) BeforeInsert() error {
-	us.CreatedAt = time.Now()
 	us.UpdatedAt = time.Now()
 	return nil
 }
