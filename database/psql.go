@@ -123,12 +123,18 @@ func InsertDefaultUserEntities(c *fiber.Ctx, user *models.User) error {
 	}
 
 	for _, t := range types {
-		expenseTypes = append(expenseTypes, models.ExpenseType{
+		expenseType := &models.ExpenseType{
 			Name: t,
-		})
+		}
+
+		if err := expenseType.BeforeInsert(); err != nil {
+			return err
+		}
+
+		expenseTypes = append(expenseTypes, *expenseType)
 	}
 
-	if _, err := PsqlDb.Model(expenseTypes).Insert(ctx); err != nil {
+	if _, err := PsqlDb.Model(&expenseTypes).Insert(ctx); err != nil {
 		return err
 	}
 
