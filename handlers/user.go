@@ -221,7 +221,7 @@ func ChangePassword(c *fiber.Ctx) error {
 	}
 
 	userSecrets := &models.UserSecrets{
-		ID: int64(userId),
+		ID: uint64(userId),
 	}
 
 	if err := database.PsqlDb.Model(userSecrets).WherePK().Select(ctx); err != nil {
@@ -277,7 +277,7 @@ func DeleteUser(c *fiber.Ctx) error {
 	userId := claims["id"].(float64)
 
 	user := &models.User{
-		ID: int64(userId),
+		ID: uint64(userId),
 	}
 
 	if _, err := database.PsqlDb.Model(user).WherePK().Delete(ctx); err != nil {

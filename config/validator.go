@@ -28,6 +28,19 @@ type (
 		OldPassword string `json:"old_password" validate:"required,min=8,max=100"`
 		NewPassword string `json:"new_password" validate:"required,min=8,max=100"`
 	}
+	InsertExpenseTypeRequest struct {
+		Name string `json:"name" validate:"required,min=2,max=100"`
+	}
+	InsertExpenseRequest struct {
+		Amount      float64 `json:"amount" validate:"required,numeric"`
+		Note        string  `json:"note" validate:"required,min=2,max=100"`
+		TypeId      uint64  `json:"type_id" validate:"required,numeric"`
+		WorkspaceId uint64  `json:"workspace_id" validate:"required,numeric"`
+		CurrencyId  uint64  `json:"currency_id" validate:"required,numeric"`
+	}
+	GetExpenseByIdRequest struct {
+		Id uint64 `params:"id" validate:"required,numeric"`
+	}
 	ErrorResponse struct {
 		Error       bool
 		FailedField string
