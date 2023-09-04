@@ -128,8 +128,14 @@ func SelectExpenseByID(c *fiber.Ctx) error {
 		})
 	}
 
+	userId := claims["id"].(float64)
+
 	expenseById := config.GetExpenseByIdRequest{}
 	if err := c.ParamsParser(&expenseById); err != nil {
+		return err
+	}
+
+	if err := config.ValidationResponse(expenseById); err != nil {
 		return err
 	}
 
@@ -142,8 +148,58 @@ func SelectExpenseByID(c *fiber.Ctx) error {
 		})
 	}
 
+	if err := database.UserCanFetchExpense(c, uint64(userId), uint64(expense.WorkspaceID)); err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"status":  "error",
+			"message": err.Error(),
+		})
+	}
+
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"status":  "success",
 		"expense": expense,
+	})
+}
+
+func SelectExpenses(c *fiber.Ctx) error {
+	ctx := c.Context()
+
+	claims := c.Locals("jwtClaims").(jwt.MapClaims)
+
+	if claims == nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"status":  "error",
+			"message": "Jwt was bypassed",
+		})
+	}
+
+	userId := claims["id"].(float64)
+
+	paginationReq := config.PaginationRequest{}
+
+	if err := c.QueryParser(&paginationReq); err != nil {
+		return err
+	}
+
+	if err := config.ValidationResponse(paginationReq); err != nil {
+		return err
+	}
+
+	if err := database.UserCanFetchExpense(c, uint64(userId), paginationReq.WorkspaceId); err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"status":  "error",
+			"message": err.Error(),
+		})
+	}
+
+	expenses := make([]*models.Expense, 0)
+
+	if err := database.PsqlDb.Model(&expenses).Relation("ExpenseType").Offset(int((paginationReq.Page - 1) * paginationReq.Size)).Limit(int(paginationReq.Size)).Select(ctx); err != nil {
+		return err
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"status":   "success",
+		"expenses": expenses,
 	})
 }

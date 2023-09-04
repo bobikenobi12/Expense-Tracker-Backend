@@ -30,6 +30,7 @@ func SetUpRoutes(app *fiber.App) {
 	userProfile.Post("/password", handlers.ChangePassword)
 
 	expenses := api.Group("/expenses")
+	expenses.Get("/", handlers.SelectExpenses)
 	expenses.Post("/types", handlers.InsertExpenseType)
 	expenses.Post("/", handlers.InsertExpense)
 	expenses.Get("/:id", handlers.SelectExpenseByID)

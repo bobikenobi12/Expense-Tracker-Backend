@@ -41,6 +41,11 @@ type (
 	GetExpenseByIdRequest struct {
 		Id uint64 `params:"id" validate:"required,numeric"`
 	}
+	PaginationRequest struct {
+		WorkspaceId uint64 `query:"workspace_id" validate:"required,numeric"`
+		Page        uint64 `query:"page" validate:"required,numeric"`
+		Size        uint64 `query:"size" validate:"required,numeric"`
+	}
 	ErrorResponse struct {
 		Error       bool
 		FailedField string

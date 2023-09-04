@@ -111,6 +111,13 @@ func InsertDefaultUserEntities(c *fiber.Ctx, user *models.User) error {
 		return err
 	}
 
+	if _, err := PsqlDb.Model(&models.WorkspaceMember{
+		UserId:      user.ID,
+		WorkspaceId: defaultWorkspace.ID,
+	}).Insert(ctx); err != nil {
+		return err
+	}
+
 	expenseTypes := []models.ExpenseType{}
 
 	types := []string{
@@ -200,6 +207,24 @@ func InsertCurrencies() error {
 
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func UserCanFetchExpense(c *fiber.Ctx, userId uint64, workspaceId uint64) error {
+	ctx := c.Context()
+
+	workspaceMember := &models.WorkspaceMember{
+		UserId: userId,
+	}
+
+	if err := PsqlDb.Model(workspaceMember).Where("user_id = ?", userId).Select(ctx); err != nil {
+		return errors.New("user is not a member of this workspace")
+	}
+
+	if workspaceMember.WorkspaceId != workspaceId {
+		return errors.New("user is not a member of this workspace")
 	}
 
 	return nil
