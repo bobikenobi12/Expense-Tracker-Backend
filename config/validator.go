@@ -46,6 +46,9 @@ type (
 		Page        uint64 `query:"page" validate:"required,numeric"`
 		Size        uint64 `query:"size" validate:"required,numeric"`
 	}
+	CreateWorkspaceRequest struct {
+		Name string `json:"name" validate:"required,min=2,max=100"`
+	}
 	ErrorResponse struct {
 		Error       bool
 		FailedField string
