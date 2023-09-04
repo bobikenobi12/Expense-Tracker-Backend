@@ -19,6 +19,11 @@ func CreateSchema(ctx context.Context) error {
 		(*models.User)(nil),
 		(*models.UserSecrets)(nil),
 		(*models.S3Object)(nil),
+		(*models.Currency)(nil),
+		(*models.Workspace)(nil),
+		(*models.WorkspaceUser)(nil),
+		(*models.CurrencyUser)(nil),
+		(*models.CurrencyWorkspace)(nil),
 	}
 
 	for _, model := range models {
