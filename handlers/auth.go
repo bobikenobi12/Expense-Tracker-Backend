@@ -62,25 +62,13 @@ func SignUpHandler(c *fiber.Ctx) error {
 		return err
 	}
 
-	defaultWorkspace := &models.Workspace{
-		Name:    "Personal",
-		OwnerId: user.ID,
-	}
-
-	if err := defaultWorkspace.BeforeInsert(); err != nil {
-		return err
-	}
-
-	if _, err := database.PsqlDb.Model(defaultWorkspace).Insert(ctx); err != nil {
+	if err := database.InsertDefaultUserEntities(c, user); err != nil {
 		return err
 	}
 
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"status": "success",
 		"data":   user,
-		"workspaces": []models.Workspace{
-			*defaultWorkspace,
-		},
 	})
 }
 

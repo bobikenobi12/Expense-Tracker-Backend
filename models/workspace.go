@@ -6,7 +6,6 @@ type Currency struct {
 	ID      int64  `json:"id"`
 	Name    string `json:"name"`
 	IsoCode string `json:"iso_code"`
-	AddedBy int64  `json:"added_by"`
 }
 type Workspace struct {
 	ID        int64  `json:"id"`
@@ -20,6 +19,7 @@ type CurrencyWorkspace struct {
 	ID          int64 `json:"id"`
 	CurrencyId  int64 `json:"currency_id"`
 	WorkspaceId int64 `json:"workspace_id"`
+	AddedBy     int64 `json:"added_by"`
 }
 
 type WorkspaceMember struct {

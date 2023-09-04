@@ -19,6 +19,7 @@ type Expense struct {
 	ExpenseType   *ExpenseType `pg:"rel:has-one" json:"expense_type"`
 	ExpenseTypeID int64        `json:"expense_type_id"`
 	WorkspaceID   int64        `json:"workspace_id"`
+	CurrencyId    int64        `json:"currency_id"`
 }
 
 func (e *Expense) BeforeInsert() error {

@@ -41,6 +41,10 @@ func SetupAndRunApp() error {
 		return err
 	}
 
+	if err := database.InsertCurrencies(); err != nil {
+		return err
+	}
+
 	app := fiber.New(fiber.Config{
 		ErrorHandler: config.GlobalErrorHandler,
 	})

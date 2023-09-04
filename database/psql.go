@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-pg/pg/v11"
 	"github.com/go-pg/pg/v11/orm"
+	"github.com/gofiber/fiber/v2"
 )
 
 var PsqlDb *pg.DB
@@ -92,4 +93,98 @@ func CheckIfEmailExists(email string) error {
 	}
 
 	return err
+}
+
+func InsertDefaultUserEntities(c *fiber.Ctx, user *models.User) error {
+	ctx := c.Context()
+
+	defaultWorkspace := &models.Workspace{
+		Name:    "Personal",
+		OwnerId: user.ID,
+	}
+
+	if err := defaultWorkspace.BeforeInsert(); err != nil {
+		return err
+	}
+
+	if _, err := PsqlDb.Model(defaultWorkspace).Insert(ctx); err != nil {
+		return err
+	}
+
+	expenseTypes := []models.ExpenseType{}
+
+	types := []string{
+		"Food",
+		"Transport",
+		"Entertainment",
+		"Shopping",
+		"Health",
+		"Other",
+	}
+
+	for _, t := range types {
+		expenseTypes = append(expenseTypes, models.ExpenseType{
+			Name: t,
+		})
+	}
+
+	if _, err := PsqlDb.Model(expenseTypes).Insert(ctx); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func InsertCurrencies() error {
+	ctx := context.Background()
+
+	countries := []struct {
+		Name    string
+		IsoCode string
+	}{
+		{"United States", "US"},
+		{"China", "CN"},
+		{"Japan", "JP"},
+		{"Germany", "DE"},
+		{"India", "IN"},
+		{"United Kingdom", "GB"},
+		{"France", "FR"},
+		{"Brazil", "BR"},
+		{"Italy", "IT"},
+		{"Canada", "CA"},
+		{"Australia", "AU"},
+		{"South Korea", "KR"},
+		{"Spain", "ES"},
+		{"Mexico", "MX"},
+		{"Indonesia", "ID"},
+		{"Netherlands", "NL"},
+		{"Saudi Arabia", "SA"},
+		{"Turkey", "TR"},
+		{"Switzerland", "CH"},
+		{"Sweden", "SE"},
+		{"Poland", "PL"},
+		{"Belgium", "BE"},
+		{"Norway", "NO"},
+		{"Austria", "AT"},
+		{"UAE", "AE"},
+		{"Singapore", "SG"},
+		{"Malaysia", "MY"},
+		{"Qatar", "QA"},
+		{"Thailand", "TH"},
+	}
+
+	currencies := []models.Currency{}
+
+	for _, country := range countries {
+		currencies = append(currencies, models.Currency{
+			Name:    country.Name,
+			IsoCode: country.IsoCode,
+		})
+	}
+
+	if _, err := PsqlDb.Model(&currencies).Where("id > ?", 0).SelectOrInsert(ctx); err != nil {
+		return err
+	}
+
+	return nil
 }
