@@ -22,7 +22,7 @@ type CurrencyWorkspace struct {
 	WorkspaceId int64 `json:"workspace_id"`
 }
 
-type WorkspaceUser struct {
+type WorkspaceMember struct {
 	ID          int64 `json:"id"`
 	UserId      int64 `json:"user_id"`
 	WorkspaceId int64 `json:"workspace_id"`
@@ -35,7 +35,7 @@ type CurrencyUser struct {
 }
 
 func (w *Workspace) BeforeInsert() error {
-	w.CreatedAt = time.Now().String()
-	w.UpdatedAt = time.Now().String()
+	w.CreatedAt = time.Now().UTC().String()
+	w.UpdatedAt = time.Now().UTC().String()
 	return nil
 }

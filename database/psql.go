@@ -21,7 +21,7 @@ func CreateSchema(ctx context.Context) error {
 		(*models.S3Object)(nil),
 		(*models.Currency)(nil),
 		(*models.Workspace)(nil),
-		(*models.WorkspaceUser)(nil),
+		(*models.WorkspaceMember)(nil),
 		(*models.CurrencyUser)(nil),
 		(*models.CurrencyWorkspace)(nil),
 	}

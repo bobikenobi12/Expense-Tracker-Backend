@@ -261,3 +261,31 @@ func ChangePassword(c *fiber.Ctx) error {
 		"message": "Password changed successfully",
 	})
 }
+
+func DeleteUser(c *fiber.Ctx) error {
+	ctx := c.Context()
+
+	claims := c.Locals("jwtClaims").(jwt.MapClaims)
+
+	if claims == nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"status":  "error",
+			"message": "Jwt was bypassed",
+		})
+	}
+
+	userId := claims["id"].(float64)
+
+	user := &models.User{
+		ID: int64(userId),
+	}
+
+	if _, err := database.PsqlDb.Model(user).WherePK().Delete(ctx); err != nil {
+		return err
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"status": "success",
+		"msg":    "User deleted",
+	})
+}

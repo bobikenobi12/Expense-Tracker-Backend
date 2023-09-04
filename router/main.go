@@ -21,6 +21,7 @@ func SetUpRoutes(app *fiber.App) {
 	auth.Get("/logout", handlers.LogoutHandler)
 
 	user := api.Group("/user")
+	user.Delete("/", handlers.DeleteUser)
 
 	userProfile := user.Group("/profile")
 	userProfile.Get("/", handlers.GetProfile)
