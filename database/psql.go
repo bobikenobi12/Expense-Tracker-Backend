@@ -175,14 +175,24 @@ func InsertCurrencies() error {
 
 	currencies := []models.Currency{}
 
-	for _, country := range countries {
+	for _, t := range countries {
+		existingCurrency := &models.Currency{}
+
+		if err := PsqlDb.Model(existingCurrency).Where("iso_code = ?", t.IsoCode).Select(ctx); err == nil {
+			continue
+		}
 		currencies = append(currencies, models.Currency{
-			Name:    country.Name,
-			IsoCode: country.IsoCode,
+			Name:    t.Name,
+			IsoCode: t.IsoCode,
 		})
 	}
+	if len(currencies) == 0 {
+		return nil
+	}
 
-	if _, err := PsqlDb.Model(&currencies).Where("id > ?", 0).SelectOrInsert(ctx); err != nil {
+	_, err := PsqlDb.Model(&currencies).Insert(ctx)
+
+	if err != nil {
 		return err
 	}
 
