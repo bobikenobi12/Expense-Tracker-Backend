@@ -62,6 +62,10 @@ func SignUpHandler(c *fiber.Ctx) error {
 		return err
 	}
 
+	if err := database.InsertDefaultUserEntities(c, user); err != nil {
+		return err
+	}
+
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"status": "success",
 		"data":   user,

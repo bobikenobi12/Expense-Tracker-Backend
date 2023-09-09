@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-pg/pg/v11"
 	"github.com/go-pg/pg/v11/orm"
+	"github.com/gofiber/fiber/v2"
 )
 
 var PsqlDb *pg.DB
@@ -19,6 +20,12 @@ func CreateSchema(ctx context.Context) error {
 		(*models.User)(nil),
 		(*models.UserSecrets)(nil),
 		(*models.S3Object)(nil),
+		(*models.Currency)(nil),
+		(*models.Workspace)(nil),
+		(*models.WorkspaceMember)(nil),
+		(*models.CurrencyUser)(nil),
+		(*models.CurrencyWorkspace)(nil),
+		(*models.WorkspaceInvitation)(nil),
 	}
 
 	for _, model := range models {
@@ -87,4 +94,139 @@ func CheckIfEmailExists(email string) error {
 	}
 
 	return err
+}
+
+func InsertDefaultUserEntities(c *fiber.Ctx, user *models.User) error {
+	ctx := c.Context()
+
+	defaultWorkspace := &models.Workspace{
+		Name:    "Personal",
+		OwnerId: user.ID,
+	}
+
+	if err := defaultWorkspace.BeforeInsert(); err != nil {
+		return err
+	}
+
+	if _, err := PsqlDb.Model(defaultWorkspace).Insert(ctx); err != nil {
+		return err
+	}
+
+	if _, err := PsqlDb.Model(&models.WorkspaceMember{
+		UserId:      user.ID,
+		WorkspaceId: defaultWorkspace.ID,
+	}).Insert(ctx); err != nil {
+		return err
+	}
+
+	expenseTypes := []models.ExpenseType{}
+
+	types := []string{
+		"Food",
+		"Transport",
+		"Entertainment",
+		"Shopping",
+		"Health",
+		"Other",
+	}
+
+	for _, t := range types {
+		expenseType := &models.ExpenseType{
+			Name: t,
+		}
+
+		if err := expenseType.BeforeInsert(); err != nil {
+			return err
+		}
+
+		expenseTypes = append(expenseTypes, *expenseType)
+	}
+
+	if _, err := PsqlDb.Model(&expenseTypes).Insert(ctx); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func InsertCurrencies() error {
+	ctx := context.Background()
+
+	countries := []struct {
+		Name    string
+		IsoCode string
+	}{
+		{"United States", "US"},
+		{"China", "CN"},
+		{"Japan", "JP"},
+		{"Germany", "DE"},
+		{"India", "IN"},
+		{"United Kingdom", "GB"},
+		{"France", "FR"},
+		{"Brazil", "BR"},
+		{"Italy", "IT"},
+		{"Canada", "CA"},
+		{"Australia", "AU"},
+		{"South Korea", "KR"},
+		{"Spain", "ES"},
+		{"Mexico", "MX"},
+		{"Indonesia", "ID"},
+		{"Netherlands", "NL"},
+		{"Saudi Arabia", "SA"},
+		{"Turkey", "TR"},
+		{"Switzerland", "CH"},
+		{"Sweden", "SE"},
+		{"Poland", "PL"},
+		{"Belgium", "BE"},
+		{"Norway", "NO"},
+		{"Austria", "AT"},
+		{"UAE", "AE"},
+		{"Singapore", "SG"},
+		{"Malaysia", "MY"},
+		{"Qatar", "QA"},
+		{"Thailand", "TH"},
+	}
+
+	currencies := []models.Currency{}
+
+	for _, t := range countries {
+		existingCurrency := &models.Currency{}
+
+		if err := PsqlDb.Model(existingCurrency).Where("iso_code = ?", t.IsoCode).Select(ctx); err == nil {
+			continue
+		}
+		currencies = append(currencies, models.Currency{
+			Name:    t.Name,
+			IsoCode: t.IsoCode,
+		})
+	}
+	if len(currencies) == 0 {
+		return nil
+	}
+
+	_, err := PsqlDb.Model(&currencies).Insert(ctx)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func UserCanFetchExpense(c *fiber.Ctx, userId uint64, workspaceId uint64) error {
+	ctx := c.Context()
+
+	workspaceMember := &models.WorkspaceMember{
+		UserId: userId,
+	}
+
+	if err := PsqlDb.Model(workspaceMember).Where("user_id = ?", userId).Select(ctx); err != nil {
+		return errors.New("user is not a member of this workspace")
+	}
+
+	if workspaceMember.WorkspaceId != workspaceId {
+		return errors.New("user is not a member of this workspace")
+	}
+
+	return nil
 }

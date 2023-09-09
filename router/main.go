@@ -21,6 +21,7 @@ func SetUpRoutes(app *fiber.App) {
 	auth.Get("/logout", handlers.LogoutHandler)
 
 	user := api.Group("/user")
+	user.Delete("/", handlers.DeleteUser)
 
 	userProfile := user.Group("/profile")
 	userProfile.Get("/", handlers.GetProfile)
@@ -29,7 +30,13 @@ func SetUpRoutes(app *fiber.App) {
 	userProfile.Post("/password", handlers.ChangePassword)
 
 	expenses := api.Group("/expenses")
+	expenses.Get("/", handlers.SelectExpenses)
 	expenses.Post("/types", handlers.InsertExpenseType)
 	expenses.Post("/", handlers.InsertExpense)
 	expenses.Get("/:id", handlers.SelectExpenseByID)
+
+	workspaces := api.Group("/workspaces")
+	workspaces.Get("/", handlers.GetWorkspaces)
+	workspaces.Post("/", handlers.CreateWorkspace)
+	workspaces.Post("/invite", handlers.InviteUsersToWorkspace)
 }

@@ -221,7 +221,7 @@ func ChangePassword(c *fiber.Ctx) error {
 	}
 
 	userSecrets := &models.UserSecrets{
-		ID: int64(userId),
+		ID: uint64(userId),
 	}
 
 	if err := database.PsqlDb.Model(userSecrets).WherePK().Select(ctx); err != nil {
@@ -259,5 +259,33 @@ func ChangePassword(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"status":  "success",
 		"message": "Password changed successfully",
+	})
+}
+
+func DeleteUser(c *fiber.Ctx) error {
+	ctx := c.Context()
+
+	claims := c.Locals("jwtClaims").(jwt.MapClaims)
+
+	if claims == nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"status":  "error",
+			"message": "Jwt was bypassed",
+		})
+	}
+
+	userId := claims["id"].(float64)
+
+	user := &models.User{
+		ID: uint64(userId),
+	}
+
+	if _, err := database.PsqlDb.Model(user).WherePK().Delete(ctx); err != nil {
+		return err
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"status": "success",
+		"msg":    "User deleted",
 	})
 }

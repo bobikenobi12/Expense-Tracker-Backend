@@ -3,13 +3,13 @@ package models
 import "time"
 
 type UserSecrets struct {
-	ID        int64  `json:"id"`
+	ID        uint64 `json:"id"`
 	Password  string `json:"password"`
 	UpdatedAt time.Time
 }
 
 type S3Object struct {
-	ID        int64   `json:"id"`
+	ID        uint64  `json:"id"`
 	ETag      *string `json:"e_tag"`
 	VersionId *string `json:"version_id"`
 	Key       string  `json:"key"`
@@ -17,15 +17,15 @@ type S3Object struct {
 }
 
 type User struct {
-	ID            int64        `json:"id"`
+	ID            uint64       `json:"id"`
 	Name          string       `json:"name"`
 	Email         string       `json:"email"`
 	CountryCode   string       `json:"country_code"`
 	CreatedAt     time.Time    `json:"created_at" pg:"default:now()"`
 	UpdatedAt     time.Time    `json:"updated_at" pg:"default:now()"`
-	UserSecretsId int64        `json:"user_secrets_id"`
+	UserSecretsId uint64       `json:"user_secrets_id"`
 	UserSecrets   *UserSecrets `json:"user_secrets" pg:"rel:has-one"`
-	ProfilePicId  int64        `json:"profile_pic_id"`
+	ProfilePicId  uint64       `json:"profile_pic_id"`
 	ProfilePic    *S3Object    `json:"profile_pic" pg:"rel:has-one"`
 }
 
