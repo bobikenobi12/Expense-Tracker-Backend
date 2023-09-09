@@ -49,6 +49,10 @@ type (
 	CreateWorkspaceRequest struct {
 		Name string `json:"name" validate:"required,min=2,max=100"`
 	}
+	InviteUsersToWorkspaceRequest struct {
+		WorkspaceId uint64   `json:"workspace_id" validate:"required,numeric"`
+		Emails      []string `json:"emails" validate:"required,min=1,dive,email"`
+	}
 	ErrorResponse struct {
 		Error       bool
 		FailedField string
