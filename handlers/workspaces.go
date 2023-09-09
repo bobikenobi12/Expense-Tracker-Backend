@@ -129,8 +129,13 @@ func InviteUsersToWorkspace(c *fiber.Ctx) error {
 		})
 	}
 
-	errChan := make(chan string, len(req.Emails))
-	emailChan := make(chan string, len(req.Emails))
+	type EmailChan struct {
+		Email string
+		Msg   string
+		Err   string
+	}
+
+	emailChan := make(chan *EmailChan, len(req.Emails))
 
 	var wg sync.WaitGroup
 
@@ -138,37 +143,42 @@ func InviteUsersToWorkspace(c *fiber.Ctx) error {
 		wg.Add(1)
 		go func(email string) {
 			defer wg.Done()
-			if err := database.CheckIfEmailExists(email); err != nil {
-				errChan <- email
+			user := &models.User{}
+			if err := database.PsqlDb.Model(user).Where("email = ?", email).Select(ctx); err != nil {
+				emailChan <- &EmailChan{Email: email, Err: "no user found with this email", Msg: "Could not send invitation"}
 				return
 			}
-			// if err := database.PsqlDb.Model(&models.WorkspaceInvitation{}).Where("email = ?", email).Delete(ctx); err != nil {
 
-			emailChan <- email
+			if err := database.PsqlDb.Model(&models.WorkspaceMember{}).Where("user_id = ? AND workspace_id = ?", user.ID, req.WorkspaceId).Select(ctx); err == nil {
+				emailChan <- &EmailChan{Email: email, Err: "user is already a member of this workspace", Msg: "Could not send invitation"}
+				return
+			}
+			res, _ := database.PsqlDb.Model(&models.WorkspaceInvitation{}).Where("email = ? AND workspace_id = ?", email, req.WorkspaceId).Delete(ctx)
+			if res.RowsAffected() > 0 {
+				emailChan <- &EmailChan{Email: email, Msg: "Invitation resent", Err: ""}
+				return
+			}
+
+			emailChan <- &EmailChan{Email: email, Msg: "", Err: ""}
+
 		}(email)
 	}
 
 	go func() {
 		wg.Wait()
-		close(errChan)
 		close(emailChan)
 	}()
 
-	log.Println(<-errChan, "and ", <-emailChan)
-	if len(errChan) == len(req.Emails) {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"status":  "error",
-			"message": "No users found with the given emails",
-		})
-	}
+	emailRes := &[]EmailChan{}
 
-	for email := range emailChan {
-		if email == <-errChan {
-			log.Println("skipping")
+	for v := range emailChan {
+		*emailRes = append(*emailRes, *v)
+		if v.Err != "" {
 			continue
 		}
+
 		wi := &models.WorkspaceInvitation{
-			Email:       email,
+			Email:       v.Email,
 			WorkspaceId: req.WorkspaceId,
 			AddedBy:     uint64(userId),
 		}
@@ -181,11 +191,19 @@ func InviteUsersToWorkspace(c *fiber.Ctx) error {
 				"message": err.Error(),
 			})
 		}
+		log.Println(v)
+		if v.Msg == "" {
+			v.Msg = "Invitation sent"
+		}
+		log.Println(v)
 	}
 
+	log.Println(emailRes)
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"status":  "success",
 		"message": "Invitations sent",
-		"errors":  <-errChan,
-	})
+		// return everything from emailChan
+		"emails": emailRes,
+	},
+	)
 }
