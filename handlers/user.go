@@ -4,6 +4,7 @@ import (
 	"ExpenseTracker/config"
 	"ExpenseTracker/database"
 	"ExpenseTracker/models"
+	"ExpenseTracker/tools"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
@@ -228,7 +229,7 @@ func ChangePassword(c *fiber.Ctx) error {
 		return err
 	}
 
-	match := config.CheckPasswordHash(changePassword.OldPassword, userSecrets.Password)
+	match := tools.CheckPasswordHash(changePassword.OldPassword, userSecrets.Password)
 
 	if !match {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -237,7 +238,7 @@ func ChangePassword(c *fiber.Ctx) error {
 		})
 	}
 
-	hashedPassword, err := config.HashPassword(changePassword.NewPassword)
+	hashedPassword, err := tools.HashPassword(changePassword.NewPassword)
 
 	if err != nil {
 		return err

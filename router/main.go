@@ -38,5 +38,9 @@ func SetUpRoutes(app *fiber.App) {
 	workspaces := api.Group("/workspaces")
 	workspaces.Get("/", handlers.GetWorkspaces)
 	workspaces.Post("/", handlers.CreateWorkspace)
+
+	// workspace := workspaces.Group("/:id")
 	workspaces.Post("/invite", handlers.InviteUsersToWorkspace)
+	workspaces.Post("/code", handlers.IssueInviteCode)
+
 }

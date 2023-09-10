@@ -53,6 +53,9 @@ type (
 		WorkspaceId uint64   `json:"workspace_id" validate:"required,numeric"`
 		Emails      []string `json:"emails" validate:"required,min=1,dive,email"`
 	}
+	IssueInviteCodeRequest struct {
+		WorkspaceId uint64 `json:"workspace_id" validate:"required,numeric"`
+	}
 	ErrorResponse struct {
 		Error       bool
 		FailedField string

@@ -26,6 +26,7 @@ func CreateSchema(ctx context.Context) error {
 		(*models.CurrencyUser)(nil),
 		(*models.CurrencyWorkspace)(nil),
 		(*models.WorkspaceInvitation)(nil),
+		(*models.WorkspaceInviteCode)(nil),
 	}
 
 	for _, model := range models {
