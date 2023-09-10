@@ -131,7 +131,8 @@ func SelectExpenseByID(c *fiber.Ctx) error {
 	userId := claims["id"].(float64)
 
 	expenseById := config.GetExpenseByIdRequest{}
-	if err := c.ParamsParser(&expenseById); err != nil {
+
+	if err := c.ParamsParser(expenseById); err != nil {
 		return err
 	}
 

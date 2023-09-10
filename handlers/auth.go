@@ -4,6 +4,7 @@ import (
 	"ExpenseTracker/config"
 	"ExpenseTracker/database"
 	"ExpenseTracker/models"
+	"ExpenseTracker/tools"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
@@ -35,7 +36,7 @@ func SignUpHandler(c *fiber.Ctx) error {
 		CountryCode: signUp.CountryCode,
 	}
 
-	hashedPassword, err := config.HashPassword(signUp.Password)
+	hashedPassword, err := tools.HashPassword(signUp.Password)
 	if err != nil {
 		return err
 	}
@@ -102,7 +103,7 @@ func LoginHandler(c *fiber.Ctx) error {
 		return err
 	}
 
-	match := config.CheckPasswordHash(login.Password, userSecrets.Password)
+	match := tools.CheckPasswordHash(login.Password, userSecrets.Password)
 
 	if !match {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{

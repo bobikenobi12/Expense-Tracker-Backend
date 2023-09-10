@@ -1,6 +1,10 @@
 package models
 
-import "time"
+import (
+	"ExpenseTracker/tools"
+	"errors"
+	"time"
+)
 
 type Currency struct {
 	ID      uint64 `json:"id"`
@@ -36,6 +40,15 @@ type WorkspaceInvitation struct {
 	AddedBy     uint64 `json:"added_by"`
 	Expires     string `json:"expires"`
 }
+
+type WorkspaceInviteCode struct {
+	ID          uint64 `json:"id"`
+	WorkspaceId uint64 `json:"workspace_id"`
+	IssuedBy    uint64 `json:"issued_by"`
+	Expires     string `json:"expires"`
+	Code        string `json:"code"`
+}
+
 type CurrencyUser struct {
 	ID         uint64 `json:"id"`
 	CurrencyId uint64 `json:"currency_id"`
@@ -60,5 +73,36 @@ func (w *WorkspaceMember) BeforeInsert() error {
 
 func (w *WorkspaceInvitation) RenewDuration() error {
 	w.Expires = time.Now().UTC().Add(time.Hour * 24).String()
+	return nil
+}
+
+func (w *WorkspaceInviteCode) RenewDuration() error {
+	w.Expires = time.Now().UTC().Add(time.Hour * 24).String()
+	return nil
+}
+
+func (w *WorkspaceInviteCode) GenerateCode() error {
+	code, err := tools.HashPassword(w.Expires)
+	if err != nil {
+		return err
+	}
+	w.Code = code
+	return nil
+}
+
+func (w *WorkspaceInviteCode) ValidateCode() error {
+	// if ok := tools.CheckPasswordHash(w.Code, w.Expires); !ok {
+	// 	return errors.New("invalid code")
+	// }
+
+	layout := "2006-01-02 15:04:05.999999 -0700 MST"
+	parsedTime, err := time.Parse(layout, w.Expires)
+	if err != nil {
+		return errors.New("invalid code")
+	}
+
+	if time.Now().UTC().After(parsedTime) {
+		return errors.New("code expired")
+	}
 	return nil
 }
