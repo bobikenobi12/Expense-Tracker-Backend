@@ -114,6 +114,10 @@ func InviteUsersToWorkspace(c *fiber.Ctx) error {
 
 	req := &config.InviteUsersToWorkspaceRequest{}
 
+	if err := c.QueryParser(req); err != nil {
+		return err
+	}
+
 	if err := c.BodyParser(req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"status":  "error",
@@ -220,7 +224,7 @@ func IssueInviteCode(c *fiber.Ctx) error {
 
 	req := &config.IssueInviteCodeRequest{}
 
-	if err := c.BodyParser(req); err != nil {
+	if err := c.QueryParser(req); err != nil {
 		return err
 	}
 

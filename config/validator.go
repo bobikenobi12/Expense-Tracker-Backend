@@ -50,11 +50,11 @@ type (
 		Name string `json:"name" validate:"required,min=2,max=100"`
 	}
 	InviteUsersToWorkspaceRequest struct {
-		WorkspaceId uint64   `json:"workspace_id" validate:"required,numeric"`
+		WorkspaceId uint64   `query:"workspace_id" validate:"required,numeric"`
 		Emails      []string `json:"emails" validate:"required,min=1,dive,email"`
 	}
 	IssueInviteCodeRequest struct {
-		WorkspaceId uint64 `json:"workspace_id" validate:"required,numeric"`
+		WorkspaceId uint64 `query:"workspace_id" validate:"required,numeric"`
 	}
 	ErrorResponse struct {
 		Error       bool
