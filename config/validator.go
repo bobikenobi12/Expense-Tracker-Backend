@@ -56,6 +56,10 @@ type (
 	IssueInviteCodeRequest struct {
 		WorkspaceId uint64 `query:"workspace_id" validate:"required,numeric"`
 	}
+	JoinWorkspaceByCodeRequest struct {
+		// $2a$14$yP3CssGseK4rg1oD834qV.rrJfdnx4ZVuc/2tzSPZIfTHe5YZqbE6
+		Code string `json:"code" validate:"required,min=60,max=60"`
+	}
 	ErrorResponse struct {
 		Error       bool
 		FailedField string

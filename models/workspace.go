@@ -2,6 +2,7 @@ package models
 
 import (
 	"ExpenseTracker/tools"
+	"errors"
 	"time"
 )
 
@@ -86,5 +87,22 @@ func (w *WorkspaceInviteCode) GenerateCode() error {
 		return err
 	}
 	w.Code = code
+	return nil
+}
+
+func (w *WorkspaceInviteCode) ValidateCode() error {
+	// if ok := tools.CheckPasswordHash(w.Code, w.Expires); !ok {
+	// 	return errors.New("invalid code")
+	// }
+
+	layout := "2006-01-02 15:04:05.999999 -0700 MST"
+	parsedTime, err := time.Parse(layout, w.Expires)
+	if err != nil {
+		return errors.New("invalid code")
+	}
+
+	if time.Now().UTC().After(parsedTime) {
+		return errors.New("code expired")
+	}
 	return nil
 }

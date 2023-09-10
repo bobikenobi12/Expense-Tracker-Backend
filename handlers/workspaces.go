@@ -255,3 +255,69 @@ func IssueInviteCode(c *fiber.Ctx) error {
 	})
 
 }
+
+func JoinWorkspaceByCode(c *fiber.Ctx) error {
+	ctx := c.Context()
+
+	claimData := c.Locals("jwtClaims").(jwt.MapClaims)
+
+	if claimData == nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"status":  "error",
+			"message": "Jwt was bypassed",
+		})
+	}
+
+	userId := claimData["id"].(float64)
+
+	req := &config.JoinWorkspaceByCodeRequest{}
+
+	if err := c.QueryParser(req); err != nil {
+		return err
+	}
+
+	if err := config.ValidationResponse(req); err != nil {
+		return err
+	}
+
+	inviteCode := &models.WorkspaceInviteCode{}
+
+	if err := database.PsqlDb.Model(inviteCode).Where("code = ?", req.Code).Select(ctx); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status":  "error",
+			"message": "No code found",
+		})
+	}
+
+	if err := inviteCode.ValidateCode(); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status":  "error",
+			"message": err.Error(),
+		})
+	}
+
+	if err := database.PsqlDb.Model(&models.WorkspaceMember{}).Where("user_id = ? AND workspace_id = ?", uint64(userId), inviteCode.WorkspaceId).Select(ctx); err == nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"status":  "error",
+			"message": "User is already a member of this workspace",
+		})
+	}
+
+	wm := &models.WorkspaceMember{
+		UserId:      uint64(userId),
+		WorkspaceId: inviteCode.WorkspaceId,
+	}
+
+	if err := wm.BeforeInsert(); err != nil {
+		return err
+	}
+
+	if _, err := database.PsqlDb.Model(wm).Insert(ctx); err != nil {
+		return err
+	}
+
+	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
+		"status": "success",
+		"data":   wm,
+	})
+}
